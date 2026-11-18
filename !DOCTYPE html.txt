@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Job Board | Work Ready Oklahoma</title>
+<style>
+:root{--abyss:#2c4e56;--reef:#4e8897;--horizon:#6fc2d7;--flame:#fb9a2d;--tint:#eef5f7;--ink:#243238}
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,Helvetica,sans-serif;color:var(--ink);background:#f6f9fa;line-height:1.45}
+header{background:var(--abyss);color:#fff;padding:14px 20px;border-bottom:5px solid var(--flame)}
+header b{letter-spacing:.12em;font-size:15px}
+main{max-width:980px;margin:0 auto;padding:22px 16px 40px}
+h1{color:var(--abyss);margin:0 0 4px;font-size:28px}
+.sub{color:#51656c;margin:0 0 16px}
+.seg{display:flex;gap:0;margin:0 0 12px;border:2px solid var(--abyss);border-radius:10px;overflow:hidden;width:100%;max-width:520px}
+.seg button{flex:1;border:0;background:#fff;color:var(--abyss);padding:12px 8px;font-size:15px;font-weight:700;cursor:pointer}
+.seg button[aria-pressed=true]{background:var(--abyss);color:#fff}
+.bar{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:10px;margin-bottom:10px}
+.bar input,.bar select{width:100%;padding:11px 10px;font-size:15px;border:1px solid #b9ccd1;border-radius:8px;background:#fff}
+.meta{display:flex;justify-content:space-between;align-items:center;margin:8px 0 12px;color:#51656c;font-size:14px}
+.meta button{background:none;border:0;color:var(--reef);font-weight:700;cursor:pointer;font-size:14px}
+.card{background:#fff;border:1px solid #d5e2e6;border-left:5px solid var(--horizon);border-radius:10px;padding:14px 16px;margin-bottom:12px}
+.card.hot{border-left-color:var(--flame)}
+.top{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+.card h2{margin:0;font-size:18px;color:var(--abyss)}
+.emp{color:#3d555d;margin-top:2px}
+.badges{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 4px}
+.b{background:var(--tint);color:var(--abyss);border-radius:999px;padding:3px 10px;font-size:12.5px;font-weight:700}
+.b.r{background:#d9f0f6}.b.h{background:#fde4c4;color:#7a4300}.b.f{background:#e4f1e6;color:#27582f}
+.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:6px 16px;margin-top:8px;font-size:14px}
+.facts span{color:#51656c;display:block;font-size:12px;text-transform:uppercase;letter-spacing:.04em}
+.apply{white-space:nowrap;background:var(--flame);color:#2b2b2b;font-weight:700;text-decoration:none;padding:10px 16px;border-radius:8px;font-size:14px}
+.apply:hover{filter:brightness(.95)}
+.none{padding:30px;text-align:center;color:#51656c;background:#fff;border:1px dashed #b9ccd1;border-radius:10px}
+footer{background:var(--abyss);color:#cfe3e8;text-align:center;padding:18px;font-size:14px}
+footer a{color:var(--horizon)}
+@media(max-width:700px){.bar{grid-template-columns:1fr 1fr}.bar input{grid-column:1/-1}.top{flex-direction:column}.apply{width:100%;text-align:center}}
+</style>
+</head>
+<body>
+<header><b>WORK READY OKLAHOMA</b></header>
+<main>
+  <h1>Job Board</h1>
+  <p class="sub">Open jobs from employer partners. Choose in-person or remote, then apply directly with the employer.</p>
+  <div class="seg" role="group" aria-label="Job type">
+    <button type="button" data-mode="" aria-pressed="true">All jobs</button>
+    <button type="button" data-mode="On-site" aria-pressed="false">In person</button>
+    <button type="button" data-mode="Remote" aria-pressed="false">Remote</button>
+  </div>
+  <div class="bar">
+    <input id="q" type="search" placeholder="Search job or employer" aria-label="Search">
+    <select id="ind" aria-label="Industry"></select>
+    <select id="emp" aria-label="Employer"></select>
+    <select id="sort" aria-label="Sort by"><option value="new">Newest</option><option value="emp">Employer A-Z</option><option value="title">Job title A-Z</option><option value="ind">Industry</option></select>
+  </div>
+  <div class="meta"><span id="count">Loading jobs&hellip;</span><span><button type="button" id="clear">Clear filters</button> <button type="button" id="refresh">Refresh</button></span></div>
+  <div id="list" aria-live="polite"></div>
+</main>
+<footer>Work Ready Oklahoma &middot; Find &middot; Get &middot; Keep a better job. &middot; <a href="https://WorkReadyOklahoma.com">WorkReadyOklahoma.com</a></footer>
+<script>
+/* Paste your Employer Connect web app address here, ending in /exec, then add ?feed=jobs */
+const FEED_URL = 'https://script.google.com/macros/s/AKfycbytp3XHMEMUuPZHPIJYWr4QjVE3ttUiw7vp6OI9J821TMEuB6zzeQjLbIxL_Du5DJb3/exec?feed=jobs';
+const SAMPLE = [{id:'1',title:'Customer Service Representative',employer:'Sample Health',industry:'Healthcare',workMode:'On-site',location:'Tulsa, OK',wage:'$16/hr',shift:'Day',jobType:'Full-Time',felonyFriendly:'Yes (Case by Case)',drugTest:'Yes',busRoute:'Route 12',education:'HS/GED',applyUrl:'https://example.com',posted:'2026-11-10',hot:true},{id:'2',title:'Remote Scheduler',employer:'Sample Care',industry:'Healthcare',workMode:'Remote',location:'Remote',wage:'$18/hr',shift:'',jobType:'Full-Time',felonyFriendly:'',drugTest:'',busRoute:'',education:'',applyUrl:'https://example.com',posted:'2026-11-09',hot:false}];
+const $ = s => document.querySelector(s);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let JOBS = [], MODE = '';
+const fmt = d => { const m = String(d || '').match(/^(\d{4})-(\d{2})-(\d{2})/); return m ? m[2] + '/' + m[3] + '/' + m[1] : String(d || ''); };
+async function load() {
+  $('#count').textContent = 'Loading jobs…';
+  try {
+    if (new URLSearchParams(location.search).has('demo')) JOBS = SAMPLE;
+    else {
+      if (!FEED_URL) throw new Error('not set up');
+      const r = await fetch(FEED_URL, { cache: 'no-store' }); const d = await r.json();
+      if (!d.ok) throw new Error('feed');
+      JOBS = d.jobs || [];
+    }
+    fillFilters(); draw();
+  } catch (e) {
+    JOBS = []; $('#count').textContent = '';
+    $('#list').innerHTML = '<div class="none">The job list could not be loaded right now. Please try again in a few minutes.</div>';
+  }
+}
+function fillFilters() {
+  const keep = { i: $('#ind').value, e: $('#emp').value };
+  const u = f => Array.from(new Set(JOBS.map(f).filter(Boolean))).sort((a, b) => a.localeCompare(b));
+  $('#ind').innerHTML = '<option value="">All industries</option>' + u(j => j.industry).map(v => `<option>${esc(v)}</option>`).join('');
+  $('#emp').innerHTML = '<option value="">All employers</option>' + u(j => j.employer).map(v => `<option>${esc(v)}</option>`).join('');
+  $('#ind').value = keep.i; $('#emp').value = keep.e;
+}
+function draw() {
+  const q = $('#q').value.trim().toLowerCase(), ind = $('#ind').value, emp = $('#emp').value, s = $('#sort').value;
+  let rows = JOBS.filter(j => (!MODE || (MODE === 'Remote' ? j.workMode === 'Remote' : j.workMode !== 'Remote')) && (!ind || j.industry === ind) && (!emp || j.employer === emp) && (!q || (j.title + ' ' + j.employer + ' ' + j.industry).toLowerCase().includes(q)));
+  const cmp = { new: (a, b) => String(b.posted).localeCompare(String(a.posted)), emp: (a, b) => a.employer.localeCompare(b.employer), title: (a, b) => a.title.localeCompare(b.title), ind: (a, b) => a.industry.localeCompare(b.industry) || a.employer.localeCompare(b.employer) }[s];
+  rows.sort((a, b) => (b.hot - a.hot) || cmp(a, b));
+  $('#count').textContent = rows.length + ' job' + (rows.length === 1 ? '' : 's');
+  $('#list').innerHTML = rows.map(j => {
+    const fact = (l, v) => v ? `<div><span>${l}</span>${esc(v)}</div>` : '';
+    return `<article class="card${j.hot ? ' hot' : ''}"><div class="top"><div><h2>${esc(j.title)}</h2><div class="emp">${esc(j.employer)}</div></div>${j.applyUrl ? `<a class="apply" href="${esc(j.applyUrl)}" target="_blank" rel="noopener">Apply</a>` : ''}</div>
+      <div class="badges">${j.hot ? '<span class="b h">Hiring now</span>' : ''}<span class="b${j.workMode === 'Remote' ? ' r' : ''}">${j.workMode === 'Remote' ? 'Remote' : 'In person'}</span>${j.industry ? `<span class="b">${esc(j.industry)}</span>` : ''}${j.jobType ? `<span class="b">${esc(j.jobType)}</span>` : ''}${j.felonyFriendly && !/^(no|unknown)/i.test(j.felonyFriendly) ? '<span class="b f">Second-chance friendly</span>' : ''}</div>
+      <div class="facts">${fact('Pay', j.wage)}${fact('Shift', j.shift)}${fact('Location', j.location)}${fact('Background check', j.felonyFriendly)}${fact('Drug test', j.drugTest)}${fact('Bus route', j.busRoute)}${fact('Education', j.education)}${fact('Posted', fmt(j.posted))}</div></article>`;
+  }).join('') || '<div class="none">No jobs match these filters. Try clearing a filter.</div>';
+}
+document.querySelectorAll('.seg button').forEach(b => b.onclick = () => { MODE = b.dataset.mode; document.querySelectorAll('.seg button').forEach(x => x.setAttribute('aria-pressed', x === b)); draw(); });
+['q', 'ind', 'emp', 'sort'].forEach(i => $('#' + i).addEventListener('input', draw));
+$('#clear').onclick = () => { $('#q').value = ''; $('#ind').value = ''; $('#emp').value = ''; $('#sort').value = 'new'; MODE = ''; document.querySelectorAll('.seg button').forEach((x, i) => x.setAttribute('aria-pressed', i === 0)); draw(); };
+$('#refresh').onclick = load;
+load();
+</script>
+</body>
+</html>
